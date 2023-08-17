@@ -52,13 +52,25 @@ resource "azurerm_synapse_workspace" "synapse_workspace" {   #Create Workspace N
   resource_group_name                  = azurerm_resource_group.resource_group.name
   location                             = azurerm_resource_group.resource_group.location
   storage_data_lake_gen2_filesystem_id = azurerm_storage_data_lake_gen2_filesystem.terraform_file_System.id
+
+  sql_administrator_login              = "sqladminuser"
+  sql_administrator_login_password     = "Orion@360"
+
+  aad_admin {
+    login     = "AzureAD Admin"
+    object_id = "32d61dfe-af50-4b3a-a88c-72ac592e5d77"
+    tenant_id = "2f4a9838-26b7-47ee-be60-ccc1fdec5953"
+  }
  
   identity {
     type = "SystemAssigned"
   }
 
   depends_on = [ azurerm_storage_data_lake_gen2_filesystem.terraform_file_System ]
- 
+
+  # lifecycle {
+  #   prevent_destroy = true
+  # }
 }
 
 resource "azurerm_synapse_firewall_rule" "firewall_rule" {   #Disabling Public Network Access
@@ -68,6 +80,7 @@ resource "azurerm_synapse_firewall_rule" "firewall_rule" {   #Disabling Public N
   end_ip_address       = "255.255.255.255"
 
   depends_on = [ azurerm_synapse_workspace.synapse_workspace]
+
 }
 
 resource "azurerm_synapse_role_assignment" "role_assignment" {
@@ -76,4 +89,19 @@ resource "azurerm_synapse_role_assignment" "role_assignment" {
   principal_id         = "32d61dfe-af50-4b3a-a88c-72ac592e5d77"
 
   depends_on = [ azurerm_synapse_firewall_rule.firewall_rule ]
+
+}
+
+resource "azurerm_synapse_linked_service" "linked_service" {
+  name                 = "LS_AZURE_BLOB"
+  synapse_workspace_id = azurerm_synapse_workspace.synapse_workspace.id
+  type                 = "AzureBlobStorage"
+  type_properties_json = <<JSON
+{
+  "connectionString": "${azurerm_storage_account.storage_account.primary_connection_string}"
+}
+JSON
+  depends_on = [
+    azurerm_synapse_firewall_rule.firewall_rule,
+  ]
 }
