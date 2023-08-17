@@ -52,6 +52,16 @@ resource "azurerm_data_factory_linked_service_azure_blob_storage" "adf_ls_blob" 
   connection_string = azurerm_storage_account.storage_account.primary_connection_string
 }
 
+resource "azurerm_data_factory_dataset_parquet" "DS-PARQUET" {
+  name = "DS-PAQRUET-ADF"
+  data_factory_id = azurerm_data_factory.data_factory.id
+  linked_service_name = azurerm_data_factory_linked_service_azure_blob_storage.adf_ls_blob.name
+
+  azure_blob_storage_location {
+    container = azurerm_storage_container.storage_container.name
+  }
+}
+
 resource "azurerm_storage_data_lake_gen2_filesystem" "terraform_file_System" {  #Create File System Name for Synapse Workspace
   name               = "filesystem"
   storage_account_id = azurerm_storage_account.storage_account.id
