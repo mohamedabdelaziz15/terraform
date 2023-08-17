@@ -62,6 +62,13 @@ resource "azurerm_data_factory_dataset_parquet" "DS-PARQUET" {
   }
 }
 
+resource "azurerm_databricks_workspace" "databricks" {
+  name = "dbterra02test"
+  resource_group_name = azurerm_resource_group.resource_group.name
+  location = azurerm_resource_group.resource_group.location
+  sku = "standard"
+}
+
 resource "azurerm_storage_data_lake_gen2_filesystem" "terraform_file_System" {  #Create File System Name for Synapse Workspace
   name               = "filesystem"
   storage_account_id = azurerm_storage_account.storage_account.id
