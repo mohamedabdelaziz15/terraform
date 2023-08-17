@@ -40,6 +40,18 @@ resource "azurerm_storage_container" "storage_container" {
     depends_on = [ azurerm_storage_account.storage_account ]
 }
 
+resource "azurerm_data_factory" "data_factory" {
+  name                = "adfterra02test"
+  location            = azurerm_resource_group.resource_group.location
+  resource_group_name = azurerm_resource_group.resource_group.name
+}
+
+resource "azurerm_data_factory_linked_service_azure_blob_storage" "adf_ls_blob" {
+  name = "LS-BLOB-ADF"
+  data_factory_id = azurerm_data_factory.data_factory.id
+  connection_string = azurerm_storage_account.storage_account.primary_connection_string
+}
+
 resource "azurerm_storage_data_lake_gen2_filesystem" "terraform_file_System" {  #Create File System Name for Synapse Workspace
   name               = "filesystem"
   storage_account_id = azurerm_storage_account.storage_account.id
@@ -67,10 +79,6 @@ resource "azurerm_synapse_workspace" "synapse_workspace" {   #Create Workspace N
   }
 
   depends_on = [ azurerm_storage_data_lake_gen2_filesystem.terraform_file_System ]
-
-  # lifecycle {
-  #   prevent_destroy = true
-  # }
 }
 
 resource "azurerm_synapse_firewall_rule" "firewall_rule" {   #Disabling Public Network Access
